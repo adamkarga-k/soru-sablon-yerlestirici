@@ -38,11 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
-                Soru Şablon <span className="text-blue-600 dark:text-blue-400">1920x1080</span>
+                Şablona Soru Yerleştirme
               </h1>
-              <span className="hidden sm:inline-flex px-2 py-0.5 text-[11px] font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full border border-blue-200 dark:border-blue-500/20">
-                12cm x 15cm
-              </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
               Otomatik Paragraf Bölme & Şablon Yerleştirici
