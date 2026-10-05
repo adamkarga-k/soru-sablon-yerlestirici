@@ -62,4 +62,4 @@ npm run build
 
 ## 👤 Geliştirici
 
-**Ubeydullah Öz** • [Instagram (@adamkarga)](https://instagram.com/adamkarga)
+**Ubeydullah Öz** • [Instagram (@adamkarga)](https://instagram.com/adamkarga) • [Blog (adamkarga.net)](http://adamkarga.net/)

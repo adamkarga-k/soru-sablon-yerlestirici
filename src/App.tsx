@@ -400,23 +400,29 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/80 py-4 text-center text-xs text-slate-500 transition-colors">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-          <span>
-            Soru Şablon Yerleştirici (1920x1080) • Orijinal Dosya Adı Garantisi
+      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/80 py-4 text-center text-xs transition-colors">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-slate-600 dark:text-slate-400">
+          <span className="font-bold text-slate-800 dark:text-slate-200">
+            Ubeydullah Öz
           </span>
-          <span className="hidden sm:inline">•</span>
-          <span>
-            Sistemi Oluşturan:{' '}
-            <a
-              href="https://instagram.com/adamkarga"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-colors inline-flex items-center gap-1"
-            >
-              Ubeydullah Öz
-            </a>
-          </span>
+          <span>•</span>
+          <a
+            href="https://instagram.com/adamkarga"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-colors"
+          >
+            Instagram (@adamkarga)
+          </a>
+          <span>•</span>
+          <a
+            href="http://adamkarga.net/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold transition-colors"
+          >
+            Blog (adamkarga.net)
+          </a>
         </div>
       </footer>
 
