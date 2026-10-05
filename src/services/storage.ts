@@ -104,9 +104,16 @@ export async function getTemplates(): Promise<Template[]> {
       request.onsuccess = () => {
         let list = request.result as Template[];
         if (!list || list.length === 0) {
-          const initial = { ...defaultTemplate, imageDataUrl: createDefaultTemplateCanvas() };
+          const initial = { ...defaultTemplate, imageDataUrl: '/mebi_template_clean.png' };
           saveTemplate(initial);
           list = [initial];
+        } else {
+          // Eski versiyondan kalan şablonu en yeni temiz şablonla güncelle
+          const defIdx = list.findIndex(t => t.id === 'default-template-1');
+          if (defIdx !== -1) {
+            list[defIdx].imageDataUrl = '/mebi_template_clean.png';
+            saveTemplate(list[defIdx]);
+          }
         }
         resolve(list);
       };

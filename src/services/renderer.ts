@@ -54,6 +54,10 @@ export async function renderQuestionOnTemplate(
     throw new Error('Canvas 2D context alınamadı.');
   }
 
+  // Maksimum görsel kalitesi için bicubic yumuşatma
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
   // 1. Şablon Arka Planını Çiz
   if (template.imageDataUrl) {
     const templateImg = await loadImage(template.imageDataUrl);
@@ -166,10 +170,10 @@ export async function renderQuestionOnTemplate(
     }
   }
 
-  // Blob ve DataURL çıktıları üret
-  const dataUrl = canvas.toDataURL('image/png', 0.98);
+  // Blob ve DataURL çıktıları üret (Kayıpsız tam kalite PNG)
+  const dataUrl = canvas.toDataURL('image/png');
   const blob = await new Promise<Blob>((resolve) => {
-    canvas.toBlob((b) => resolve(b || new Blob()), 'image/png', 0.98);
+    canvas.toBlob((b) => resolve(b || new Blob()), 'image/png');
   });
 
   return {
