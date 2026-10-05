@@ -70,19 +70,19 @@ export function createDefaultTemplateCanvas(): string {
 
 export const defaultTemplate: Template = {
   id: 'default-template-1',
-  name: 'Standart 1920x1080 Şablon',
-  imageDataUrl: '', // Çalışma zamanında üretilecek
+  name: 'MEBİ Tarama Testi Şablonu (1920x1080)',
+  imageDataUrl: '/mebi_template_clean.png', // Kullanıcının gönderdiği orijinal MEBİ şablonu
   createdAt: Date.now(),
   isDefault: true,
   guidelines: {
-    topBound: 80,          // Kırmızı üst sınır
-    bottomBound: 1000,     // Kırmızı alt sınır
-    leftColumnX: 120,      // Mavi sol dikey çizgi (paragraf yaslanma)
-    rightColumnX: 1000,    // Mavi sağ dikey çizgi (soru kökü yaslanma)
-    columnWidth: 800,      // Sütun genişliği
-    targetWidthCm: 12,     // 12 cm genişlik
-    maxHeightCm: 15,       // 15 cm bölünme eşiği
-    pixelsPerCm: 60,       // 60 px/cm (12 cm = 720 px, 15 cm = 900 px)
+    topBound: 125,         // Üst Kırmızı Çizgi (1920x1080 pikselde)
+    bottomBound: 985,      // Alt Kırmızı Çizgi (1920x1080 pikselde)
+    leftColumnX: 920,      // Sol Mavi Çizgi (Orta sol sınır - Paragraf yaslanma)
+    rightColumnX: 1000,    // Sağ Mavi Çizgi (Orta sağ sınır - Soru kökü yaslanma)
+    columnWidth: 720,      // 12 cm genişlik (60 px/cm)
+    targetWidthCm: 12,     // 12 cm otomatik hedef genişlik
+    maxHeightCm: 15,       // 15 cm aşılınca ikiye bölme eşiği
+    pixelsPerCm: 60,       // 1 cm = 60 px
   }
 };
 

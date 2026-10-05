@@ -129,13 +129,15 @@ export async function renderQuestionOnTemplate(
         part1RenderW = part1RenderW * scale;
       }
 
-      // Sol kenar sol mavi çizgiye (leftColumnX), üst kenar üst kırmızı çizgiye (topBound) yaslanır
-      const part1X = leftColumnX;
+      // Sol parça: Sol mavi çizgiye (leftColumnX) yaslanır.
+      // Eğer sol mavi çizgi orta ayırıcı ise (örn: 920px), sol parçanın sağ kenarı bu çizgiye yaslanır.
+      // Eğer sol kenar çizgisi olarak girilmişse (örn: < 500px), sol kenarı bu çizgiye yaslanır.
+      const part1X = leftColumnX > 600 ? Math.round(leftColumnX - part1RenderW) : leftColumnX;
       const part1Y = topBound;
 
       ctx.drawImage(
         questionImg,
-        0, 0, qW, part1H, // Kaynak kırpma (öncül)
+        0, 0, qW, part1H, // Kaynak kırpma (öncül / paragraf)
         part1X, part1Y, part1RenderW, part1RenderH // Hedef yerleşim
       );
     }
