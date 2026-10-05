@@ -1,13 +1,13 @@
-import { Template, Category, AppSettings } from '../types';
+import { Template, Category, AppSettings, QuestionItem, QuestionStatus } from '../types';
 
 const DB_NAME = 'SoruSablonDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 interface DBSchema {
   templates: Template;
   categories: Category;
   settings: { key: string; value: any };
-  questionCache: { id: string; originalFileName: string; dataUrl: string; renderedDataUrl?: string };
+  questions: StoredQuestionRecord;
 }
 
 function openDB(): Promise<IDBDatabase> {
@@ -25,8 +25,8 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains('settings')) {
         db.createObjectStore('settings', { keyPath: 'key' });
       }
-      if (!db.objectStoreNames.contains('questionCache')) {
-        db.createObjectStore('questionCache', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('questions')) {
+        db.createObjectStore('questions', { keyPath: 'id' });
       }
     };
 
@@ -214,5 +214,178 @@ export function saveLocalSettings(settings: AppSettings): void {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch (e) {
     console.error('Settings save error:', e);
+  }
+}
+
+// ==========================================
+// SORULARIN KALICI HAFIZA YÖNETİMİ (IndexedDB)
+// ==========================================
+export interface StoredQuestionRecord {
+  id: string;
+  originalFileName: string;
+  originalBlob: Blob;
+  categoryId: string;
+  width: number;
+  height: number;
+  status: QuestionStatus;
+  statusMessage?: string;
+  isSplit: boolean;
+  splitRatio: number;
+  splitY: number;
+  renderedDataUrl?: string;
+  renderedBlob?: Blob;
+  errorMessage?: string;
+  createdAt: number;
+}
+
+export async function saveStoredQuestion(question: QuestionItem): Promise<void> {
+  try {
+    const db = await openDB();
+    let originalBlob = question.file as Blob;
+    if (!originalBlob && question.previewUrl) {
+      try {
+        const res = await fetch(question.previewUrl);
+        originalBlob = await res.blob();
+      } catch (e) {
+        console.error('Blob fetch failed:', e);
+      }
+    }
+
+    const record: StoredQuestionRecord = {
+      id: question.id,
+      originalFileName: question.originalFileName,
+      originalBlob: originalBlob || new Blob([]),
+      categoryId: question.categoryId,
+      width: question.width,
+      height: question.height,
+      status: question.status,
+      statusMessage: question.statusMessage,
+      isSplit: question.isSplit,
+      splitRatio: question.splitRatio,
+      splitY: question.splitY,
+      renderedDataUrl: question.renderedDataUrl,
+      renderedBlob: question.renderedBlob,
+      errorMessage: question.errorMessage,
+      createdAt: Date.now(),
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('questions', 'readwrite');
+      const store = tx.objectStore('questions');
+      const request = store.put(record);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error('saveStoredQuestion error:', err);
+  }
+}
+
+export async function saveAllStoredQuestions(questionList: QuestionItem[]): Promise<void> {
+  try {
+    const db = await openDB();
+    const tx = db.transaction('questions', 'readwrite');
+    const store = tx.objectStore('questions');
+
+    for (const q of questionList) {
+      const originalBlob = (q.file as Blob) || new Blob([]);
+      const record: StoredQuestionRecord = {
+        id: q.id,
+        originalFileName: q.originalFileName,
+        originalBlob,
+        categoryId: q.categoryId,
+        width: q.width,
+        height: q.height,
+        status: q.status,
+        statusMessage: q.statusMessage,
+        isSplit: q.isSplit,
+        splitRatio: q.splitRatio,
+        splitY: q.splitY,
+        renderedDataUrl: q.renderedDataUrl,
+        renderedBlob: q.renderedBlob,
+        errorMessage: q.errorMessage,
+        createdAt: Date.now(),
+      };
+      store.put(record);
+    }
+
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (err) {
+    console.error('saveAllStoredQuestions error:', err);
+  }
+}
+
+export async function getSavedQuestions(): Promise<QuestionItem[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction('questions', 'readonly');
+      const store = tx.objectStore('questions');
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const records = (request.result as StoredQuestionRecord[]) || [];
+        const items: QuestionItem[] = records.map((rec) => {
+          const file = new File([rec.originalBlob], rec.originalFileName, {
+            type: rec.originalBlob?.type || 'image/png',
+          });
+          const previewUrl = URL.createObjectURL(file);
+          return {
+            id: rec.id,
+            originalFileName: rec.originalFileName,
+            file,
+            previewUrl,
+            categoryId: rec.categoryId,
+            width: rec.width,
+            height: rec.height,
+            status: rec.status || 'rendered',
+            statusMessage: rec.statusMessage,
+            isSplit: rec.isSplit,
+            splitRatio: rec.splitRatio,
+            splitY: rec.splitY,
+            renderedDataUrl: rec.renderedDataUrl,
+            renderedBlob: rec.renderedBlob,
+            errorMessage: rec.errorMessage,
+          };
+        });
+        resolve(items);
+      };
+      request.onerror = () => resolve([]);
+    });
+  } catch (err) {
+    console.error('getSavedQuestions error:', err);
+    return [];
+  }
+}
+
+export async function deleteStoredQuestion(id: string): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('questions', 'readwrite');
+      const store = tx.objectStore('questions');
+      const request = store.delete(id);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error('deleteStoredQuestion error:', err);
+  }
+}
+
+export async function clearAllStoredQuestions(): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('questions', 'readwrite');
+      const store = tx.objectStore('questions');
+      const request = store.clear();
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error('clearAllStoredQuestions error:', err);
   }
 }

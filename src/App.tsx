@@ -25,7 +25,12 @@ import {
   getLocalSettings, 
   saveLocalSettings,
   defaultTemplate,
-  createDefaultTemplateCanvas
+  createDefaultTemplateCanvas,
+  saveStoredQuestion,
+  saveAllStoredQuestions,
+  getSavedQuestions,
+  deleteStoredQuestion,
+  clearAllStoredQuestions
 } from './services/storage';
 
 import { 
@@ -97,6 +102,12 @@ export const App: React.FC = () => {
         setSelectedTemplateId(localSets.selectedTemplateId);
       } else if (savedTemplates.length > 0) {
         setSelectedTemplateId(savedTemplates[0].id);
+      }
+
+      // Hafızadaki kayıtlı soruları yükle (F5 / Sayfa yenilemelerinde kaybolmaz)
+      const savedQuestions = await getSavedQuestions();
+      if (savedQuestions && savedQuestions.length > 0) {
+        setQuestions(savedQuestions);
       }
     }
     init();
@@ -172,6 +183,7 @@ export const App: React.FC = () => {
       qList.map((q) => processQuestion(q, tpl))
     );
     setQuestions(updatedQuestions);
+    await saveAllStoredQuestions(updatedQuestions);
     setIsBatchProcessing(false);
   };
 
@@ -205,6 +217,7 @@ export const App: React.FC = () => {
       setQuestions((prev) => prev.map((q) => (q.id === res.id ? res : q)));
     }
 
+    await saveAllStoredQuestions(processedNew);
     setIsBatchProcessing(false);
   };
 
@@ -213,19 +226,18 @@ export const App: React.FC = () => {
     if (!targetQ) return;
 
     const renderRes = await renderQuestionOnTemplate(currentTemplate, targetQ, newSplitRatio);
+    const updatedQ: QuestionItem = {
+      ...targetQ,
+      splitRatio: newSplitRatio,
+      splitY: Math.round(targetQ.height * newSplitRatio),
+      renderedDataUrl: renderRes.dataUrl,
+      renderedBlob: renderRes.blob,
+    };
+
     setQuestions((prev) =>
-      prev.map((q) =>
-        q.id === questionId
-          ? {
-              ...q,
-              splitRatio: newSplitRatio,
-              splitY: Math.round(q.height * newSplitRatio),
-              renderedDataUrl: renderRes.dataUrl,
-              renderedBlob: renderRes.blob,
-            }
-          : q
-      )
+      prev.map((q) => (q.id === questionId ? updatedQ : q))
     );
+    await saveStoredQuestion(updatedQ);
   };
 
   const handleDownloadSingle = (question: QuestionItem) => {
@@ -277,16 +289,18 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleDeleteQuestion = (id: string) => {
+  const handleDeleteQuestion = async (id: string) => {
     setQuestions((prev) => prev.filter((q) => q.id !== id));
     setSelectedQuestionIds((prev) => prev.filter((itemId) => itemId !== id));
+    await deleteStoredQuestion(id);
   };
 
-  const handleClearAllQuestions = () => {
+  const handleClearAllQuestions = async () => {
     if (questions.length === 0) return;
     if (window.confirm('Yüklenen tüm soruları listeden silmek istediğinize emin misiniz?')) {
       setQuestions([]);
       setSelectedQuestionIds([]);
+      await clearAllStoredQuestions();
     }
   };
 
@@ -304,21 +318,27 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleBatchAssignCategory = (targetCatId: string) => {
+  const handleBatchAssignCategory = async (targetCatId: string) => {
     if (!targetCatId || selectedQuestionIds.length === 0) return;
-    setQuestions((prev) =>
-      prev.map((q) =>
-        selectedQuestionIds.includes(q.id) ? { ...q, categoryId: targetCatId } : q
-      )
+    const updatedQuestions = questions.map((q) =>
+      selectedQuestionIds.includes(q.id) ? { ...q, categoryId: targetCatId } : q
     );
+    setQuestions(updatedQuestions);
+    const toSave = updatedQuestions.filter((q) => selectedQuestionIds.includes(q.id));
     setSelectedQuestionIds([]);
+    await saveAllStoredQuestions(toSave);
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
   };
 
-  const handleCategoryChange = (questionId: string, newCatId: string) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === questionId ? { ...q, categoryId: newCatId } : q))
-    );
+  const handleCategoryChange = async (questionId: string, newCatId: string) => {
+    const targetQ = questions.find((q) => q.id === questionId);
+    if (targetQ) {
+      const updatedQ = { ...targetQ, categoryId: newCatId };
+      setQuestions((prev) =>
+        prev.map((q) => (q.id === questionId ? updatedQ : q))
+      );
+      await saveStoredQuestion(updatedQ);
+    }
   };
 
   const filteredQuestions = questions.filter((q) => {
