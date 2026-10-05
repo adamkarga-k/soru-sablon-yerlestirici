@@ -79,8 +79,57 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setTemplateImage(dataUrl);
+      const rawDataUrl = event.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const origW = img.naturalWidth || img.width;
+        const origH = img.naturalHeight || img.height;
+
+        // Eğer görsel zaten tam 1920x1080 ise doğrudan kullan
+        if (origW === 1920 && origH === 1080) {
+          setTemplateImage(rawDataUrl);
+          return;
+        }
+
+        // 1280x720 veya farklı ebattaki görselleri yüksek kalitede 1920x1080'e büyüt
+        const canvas = document.createElement('canvas');
+        canvas.width = 1920;
+        canvas.height = 1080;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // Beyaz arka plan
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, 1920, 1080);
+
+          // 16:9 oranına yakınsa doğrudan 1920x1080'e tam ölçekle (örn: 1280x720 -> 1920x1080)
+          const aspect = origW / origH;
+          const targetAspect = 1920 / 1080; // ~1.777
+
+          if (Math.abs(aspect - targetAspect) < 0.05) {
+            ctx.drawImage(img, 0, 0, 1920, 1080);
+          } else {
+            // Farklı oranlardaysa en/boy oranını koruyarak ortala
+            let renderW = 1920;
+            let renderH = 1920 / aspect;
+            if (renderH > 1080) {
+              renderH = 1080;
+              renderW = 1080 * aspect;
+            }
+            const posX = Math.round((1920 - renderW) / 2);
+            const posY = Math.round((1080 - renderH) / 2);
+            ctx.drawImage(img, posX, posY, renderW, renderH);
+          }
+
+          const upscaledDataUrl = canvas.toDataURL('image/png');
+          setTemplateImage(upscaledDataUrl);
+        } else {
+          setTemplateImage(rawDataUrl);
+        }
+      };
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   };
@@ -348,16 +397,19 @@ export const TemplateManagerModal: React.FC<TemplateManagerModalProps> = ({
 
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                    1920x1080 Şablon Görseli
+                    Şablon Görseli (1920x1080 veya 1280x720)
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Upload className="w-4 h-4 text-blue-500" />
-                      Farklı Görsel Yükle (1920x1080)
+                      Görsel Yükle (1920x1080 / 1280x720)
                     </button>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      * 1280x720 veya farklı ebattaki şablonlar otomatik olarak yüksek kaliteli 1920x1080 boyutuna dönüştürülür.
+                    </span>
                     <input
                       ref={fileInputRef}
                       type="file"
