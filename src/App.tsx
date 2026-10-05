@@ -70,6 +70,7 @@ export const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('cat-all');
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
   const [settings, setSettings] = useState<AppSettings>(getLocalSettings());
 
   // Modallar
@@ -278,13 +279,40 @@ export const App: React.FC = () => {
 
   const handleDeleteQuestion = (id: string) => {
     setQuestions((prev) => prev.filter((q) => q.id !== id));
+    setSelectedQuestionIds((prev) => prev.filter((itemId) => itemId !== id));
   };
 
   const handleClearAllQuestions = () => {
     if (questions.length === 0) return;
     if (window.confirm('Yüklenen tüm soruları listeden silmek istediğinize emin misiniz?')) {
       setQuestions([]);
+      setSelectedQuestionIds([]);
     }
+  };
+
+  const handleToggleSelectQuestion = (id: string) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllQuestions = () => {
+    if (selectedQuestionIds.length === filteredQuestions.length) {
+      setSelectedQuestionIds([]);
+    } else {
+      setSelectedQuestionIds(filteredQuestions.map((q) => q.id));
+    }
+  };
+
+  const handleBatchAssignCategory = (targetCatId: string) => {
+    if (!targetCatId || selectedQuestionIds.length === 0) return;
+    setQuestions((prev) =>
+      prev.map((q) =>
+        selectedQuestionIds.includes(q.id) ? { ...q, categoryId: targetCatId } : q
+      )
+    );
+    setSelectedQuestionIds([]);
+    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
   };
 
   const handleCategoryChange = (questionId: string, newCatId: string) => {
@@ -335,11 +363,12 @@ export const App: React.FC = () => {
               onQuestionsAdded={handleQuestionsAdded}
               currentCount={questions.length}
               maxQuestions={50}
+              categories={categories}
               selectedCategoryId={selectedCategoryId}
             />
 
             {/* Soru Listesi Başlık & Filtre Bilgisi */}
-            <div className="flex items-center justify-between pt-1">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-2.5">
                 <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                   Yüklenen Sorular
@@ -352,6 +381,14 @@ export const App: React.FC = () => {
                     <Filter className="w-3 h-3 text-blue-500" />
                     Filtre: {categories.find((c) => c.id === selectedCategoryId)?.name}
                   </span>
+                )}
+                {filteredQuestions.length > 0 && (
+                  <button
+                    onClick={handleSelectAllQuestions}
+                    className="ml-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-2 py-0.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    {selectedQuestionIds.length === filteredQuestions.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
+                  </button>
                 )}
               </div>
 
@@ -378,6 +415,46 @@ export const App: React.FC = () => {
               )}
             </div>
 
+            {/* Toplu Kategori Atama Araç Çubuğu */}
+            {selectedQuestionIds.length > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/80 rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-blue-700 dark:text-blue-300">
+                    ✓ {selectedQuestionIds.length} soru seçildi
+                  </span>
+                  <button
+                    onClick={() => setSelectedQuestionIds([])}
+                    className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white underline text-[11px] cursor-pointer"
+                  >
+                    Seçimi Temizle
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 dark:text-slate-300 font-semibold">
+                    Seçilenleri Kategoriye Taşı:
+                  </span>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleBatchAssignCategory(e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    defaultValue=""
+                    className="bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-bold px-3 py-1.5 rounded-xl border border-blue-300 dark:border-blue-700 text-xs outline-none cursor-pointer hover:border-blue-500 transition-colors"
+                  >
+                    <option value="" disabled>Kategori Seçin...</option>
+                    {categories.filter(c => c.id !== 'cat-all').map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Soruların Grid Listesi */}
             {filteredQuestions.length === 0 ? (
               <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3 shadow-sm">
@@ -400,6 +477,8 @@ export const App: React.FC = () => {
                     key={q.id}
                     question={q}
                     categories={categories}
+                    isSelected={selectedQuestionIds.includes(q.id)}
+                    onToggleSelect={handleToggleSelectQuestion}
                     onDelete={handleDeleteQuestion}
                     onEditSplit={(target) => setEditingQuestion(target)}
                     onCategoryChange={handleCategoryChange}

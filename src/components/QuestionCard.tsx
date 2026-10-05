@@ -14,6 +14,8 @@ import { QuestionItem, Category } from '../types';
 interface QuestionCardProps {
   question: QuestionItem;
   categories: Category[];
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
   onDelete: (id: string) => void;
   onEditSplit: (question: QuestionItem) => void;
   onCategoryChange: (id: string, newCategoryId: string) => void;
@@ -24,6 +26,8 @@ interface QuestionCardProps {
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   categories,
+  isSelected,
+  onToggleSelect,
   onDelete,
   onEditSplit,
   onCategoryChange,
@@ -35,25 +39,42 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   // 12 cm genişliğe göre orantılı yükseklik (cm)
   const calculatedHeightCm = ((question.height / question.width) * 12).toFixed(1);
 
+  const validCategory = categories.find((c) => c.id === question.categoryId && c.id !== 'cat-all');
+
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-slate-700 rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 shadow-sm hover:shadow-md group">
-        {/* Üst Kısım: Dosya Adı ve Durum */}
+      <div className={`bg-white dark:bg-slate-900 border rounded-2xl p-4 transition-all flex flex-col justify-between gap-3 shadow-sm hover:shadow-md group ${
+        isSelected
+          ? 'border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/20 dark:bg-blue-900/10'
+          : 'border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-slate-700'
+      }`}>
+        {/* Üst Kısım: Seçim Checkbox + Dosya Adı ve Durum */}
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 
-                className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" 
-                title={question.originalFileName}
-              >
-                {question.originalFileName}
-              </h3>
-              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                <span>{question.width}x{question.height}px</span>
-                <span>•</span>
-                <span className={question.isSplit ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-emerald-600 dark:text-emerald-400 font-semibold'}>
-                  12cm x {calculatedHeightCm}cm
-                </span>
+            <div className="flex items-start gap-2.5 min-w-0">
+              {onToggleSelect && (
+                <input
+                  type="checkbox"
+                  checked={isSelected || false}
+                  onChange={() => onToggleSelect(question.id)}
+                  className="mt-1 w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer shrink-0"
+                  title="Bu soruyu seç"
+                />
+              )}
+              <div className="min-w-0">
+                <h3 
+                  className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" 
+                  title={question.originalFileName}
+                >
+                  {question.originalFileName}
+                </h3>
+                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span>{question.width}x{question.height}px</span>
+                  <span>•</span>
+                  <span className={question.isSplit ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-emerald-600 dark:text-emerald-400 font-semibold'}>
+                    12cm x {calculatedHeightCm}cm
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -73,12 +94,24 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
           {/* Kategori Seçici */}
           <div className="flex items-center gap-1.5 text-xs">
-            <Folder className="w-3.5 h-3.5 text-slate-400" />
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+              style={{ backgroundColor: validCategory?.color || '#94a3b8' }}
+            />
             <select
-              value={question.categoryId}
+              value={validCategory ? validCategory.id : ''}
               onChange={(e) => onCategoryChange(question.id, e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-[11px] font-medium rounded-lg px-2 py-1 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 outline-none cursor-pointer"
+              className={`text-[11px] font-semibold rounded-lg px-2 py-1 border outline-none cursor-pointer transition-colors ${
+                !validCategory
+                  ? 'border-amber-400 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 font-bold'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+              }`}
             >
+              {!validCategory && (
+                <option value="" disabled>
+                  ⚠️ Kategori Seçin...
+                </option>
+              )}
               {categories.filter(c => c.id !== 'cat-all').map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}

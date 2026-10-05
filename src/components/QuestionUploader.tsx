@@ -1,12 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { UploadCloud, Image as ImageIcon, Sparkles, AlertCircle } from 'lucide-react';
-import { QuestionItem } from '../types';
+import React, { useRef, useState, useEffect } from 'react';
+import { UploadCloud, Image as ImageIcon, Sparkles, AlertCircle, Folder } from 'lucide-react';
+import { QuestionItem, Category } from '../types';
 import { checkQuestionSplit } from '../services/renderer';
 
 interface QuestionUploaderProps {
   onQuestionsAdded: (newQuestions: QuestionItem[]) => void;
   currentCount: number;
   maxQuestions?: number;
+  categories: Category[];
   selectedCategoryId: string;
 }
 
@@ -14,11 +15,29 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
   onQuestionsAdded,
   currentCount,
   maxQuestions = 50,
+  categories,
   selectedCategoryId,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const availableCategories = categories.filter((c) => c.id !== 'cat-all');
+
+  const [targetCategoryId, setTargetCategoryId] = useState<string>(() => {
+    if (selectedCategoryId !== 'cat-all') return selectedCategoryId;
+    return availableCategories[0]?.id || 'cat-turkce';
+  });
+
+  useEffect(() => {
+    if (selectedCategoryId !== 'cat-all') {
+      setTargetCategoryId(selectedCategoryId);
+    } else {
+      if (!availableCategories.some((c) => c.id === targetCategoryId)) {
+        setTargetCategoryId(availableCategories[0]?.id || 'cat-turkce');
+      }
+    }
+  }, [selectedCategoryId, categories]);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -31,6 +50,8 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
 
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
     setIsProcessingFiles(true);
+
+    const resolvedCategoryId = targetCategoryId || availableCategories[0]?.id || 'cat-turkce';
 
     const newQuestions: QuestionItem[] = [];
 
@@ -53,7 +74,7 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
         originalFileName: file.name,
         file,
         previewUrl,
-        categoryId: selectedCategoryId === 'cat-all' ? 'cat-turkce' : selectedCategoryId,
+        categoryId: resolvedCategoryId,
         width,
         height,
         status: 'idle',
@@ -113,6 +134,30 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
             Aynı anda <span className="text-blue-600 dark:text-blue-400 font-semibold">{maxQuestions} soruya kadar</span> yükleyebilirsiniz. Orijinal dosya adlarınız korunur.
           </p>
         </div>
+
+        {/* Yüklenecek Kategori Seçim / Bilgi Rozeti */}
+        {availableCategories.length > 0 && (
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700/80 text-xs shadow-sm z-10 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+          >
+            <Folder className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span className="font-semibold text-slate-600 dark:text-slate-300">
+              Yüklenecek Kategori:
+            </span>
+            <select
+              value={targetCategoryId}
+              onChange={(e) => setTargetCategoryId(e.target.value)}
+              className="bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-bold px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs outline-none cursor-pointer hover:border-blue-500 transition-colors"
+            >
+              {availableCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-[11px] text-slate-500">
           <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-700/60 font-medium">
