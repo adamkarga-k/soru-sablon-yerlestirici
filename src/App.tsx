@@ -7,9 +7,7 @@ import {
   Download, 
   Trash2, 
   Filter, 
-  AlertCircle,
-  HelpCircle,
-  Settings,
+  HelpCircle, 
   RefreshCw,
   FolderOpen
 } from 'lucide-react';
@@ -35,13 +33,9 @@ import {
   checkQuestionSplit 
 } from './services/renderer';
 
-import { 
-  analyzeQuestionWithGemini, 
-  detectSplitByWhitespace 
-} from './services/gemini';
+import { detectSplitByWhitespace } from './services/imageAnalysis';
 
 import { Navbar } from './components/Navbar';
-import { ApiKeyModal } from './components/ApiKeyModal';
 import { HowToUseModal } from './components/HowToUseModal';
 import { TemplateManagerModal } from './components/TemplateManagerModal';
 import { CategorySidebar } from './components/CategorySidebar';
@@ -79,7 +73,6 @@ export const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(getLocalSettings());
 
   // Modallar
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState<boolean>(false);
   const [isHowToUseOpen, setIsHowToUseOpen] = useState<boolean>(false);
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState<boolean>(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionItem | null>(null);
@@ -104,21 +97,11 @@ export const App: React.FC = () => {
       } else if (savedTemplates.length > 0) {
         setSelectedTemplateId(savedTemplates[0].id);
       }
-
-      if (!localSets.hasSeenOnboarding) {
-        setIsApiKeyModalOpen(true);
-      }
     }
     init();
   }, []);
 
   const currentTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0] || defaultTemplate;
-
-  // Ayarları Güncelleme
-  const handleSaveSettings = (newSettings: AppSettings) => {
-    setSettings(newSettings);
-    saveLocalSettings(newSettings);
-  };
 
   // Aktif Şablon Değişimi
   const handleSelectTemplate = (id: string) => {
@@ -133,12 +116,10 @@ export const App: React.FC = () => {
     }
   };
 
-  // Soru işleme fonksiyonu
+  // Soru işleme fonksiyonu (Tamamen yerel & API'siz!)
   const processQuestion = useCallback(async (
     q: QuestionItem, 
-    tpl: Template,
-    apiKey: string,
-    modelName: string
+    tpl: Template
   ): Promise<QuestionItem> => {
     try {
       let isSplit = q.isSplit;
@@ -152,29 +133,14 @@ export const App: React.FC = () => {
       );
       isSplit = splitCheck.isSplit;
 
+      // 15 cm'yi aştıysa akıllı beyaz boşluk analizi ile otomatik kesme noktasını bul
       if (isSplit && !q.splitRatio) {
-        if (apiKey && apiKey.trim() !== '') {
-          try {
-            const base64 = await fileToBase64(q.file);
-            const geminiRes = await analyzeQuestionWithGemini(base64, q.file.type, apiKey, modelName);
-            splitRatio = geminiRes.splitRatio;
-          } catch (apiErr) {
-            console.warn('Gemini analizi başarısız, beyaz boşluk algoritmasına geçiliyor:', apiErr);
-            const imgEl = await new Promise<HTMLImageElement>((resolve) => {
-              const im = new Image();
-              im.onload = () => resolve(im);
-              im.src = q.previewUrl;
-            });
-            splitRatio = detectSplitByWhitespace(imgEl);
-          }
-        } else {
-          const imgEl = await new Promise<HTMLImageElement>((resolve) => {
-            const im = new Image();
-            im.onload = () => resolve(im);
-            im.src = q.previewUrl;
-          });
-          splitRatio = detectSplitByWhitespace(imgEl);
-        }
+        const imgEl = await new Promise<HTMLImageElement>((resolve) => {
+          const im = new Image();
+          im.onload = () => resolve(im);
+          im.src = q.previewUrl;
+        });
+        splitRatio = detectSplitByWhitespace(imgEl);
       }
 
       const renderRes = await renderQuestionOnTemplate(tpl, { ...q, splitRatio, isSplit }, splitRatio);
@@ -202,7 +168,7 @@ export const App: React.FC = () => {
   const reRenderAllQuestions = async (tpl: Template, qList: QuestionItem[]) => {
     setIsBatchProcessing(true);
     const updatedQuestions = await Promise.all(
-      qList.map((q) => processQuestion(q, tpl, settings.geminiApiKey, settings.geminiModel))
+      qList.map((q) => processQuestion(q, tpl))
     );
     setQuestions(updatedQuestions);
     setIsBatchProcessing(false);
@@ -215,7 +181,7 @@ export const App: React.FC = () => {
 
     const processedNew: QuestionItem[] = [];
     for (const item of newOnes) {
-      const res = await processQuestion(item, currentTemplate, settings.geminiApiKey, settings.geminiModel);
+      const res = await processQuestion(item, currentTemplate);
       processedNew.push(res);
       setQuestions((prev) => prev.map((q) => (q.id === res.id ? res : q)));
     }
@@ -318,10 +284,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 flex flex-col transition-colors">
-      {/* Sadeleştirilmiş Üst Menü */}
+      {/* Üst Menü */}
       <Navbar
         onOpenHowToUse={() => setIsHowToUseOpen(true)}
-        onOpenSettings={() => setIsApiKeyModalOpen(true)}
         onDownloadAllZip={handleDownloadAllZip}
         hasRenderedQuestions={hasRenderedQuestions}
         isProcessingZip={isProcessingZip}
@@ -411,7 +376,7 @@ export const App: React.FC = () => {
                     onCategoryChange={handleCategoryChange}
                     onDownloadSingle={handleDownloadSingle}
                     onReRender={(target) =>
-                      processQuestion(target, currentTemplate, settings.geminiApiKey, settings.geminiModel)
+                      processQuestion(target, currentTemplate)
                     }
                   />
                 ))}
@@ -438,7 +403,7 @@ export const App: React.FC = () => {
       <footer className="mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/80 py-4 text-center text-xs text-slate-500 transition-colors">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
           <span>
-            Soru Şablon Yerleştirici (1920x1080) • Orijinal Dosya Adı Garantisi • Gemini Vision AI Entegrasyonu
+            Soru Şablon Yerleştirici (1920x1080) • Orijinal Dosya Adı Garantisi
           </span>
           <span className="hidden sm:inline">•</span>
           <span>
@@ -456,13 +421,6 @@ export const App: React.FC = () => {
       </footer>
 
       {/* MODALLAR */}
-      <ApiKeyModal
-        isOpen={isApiKeyModalOpen}
-        onClose={() => setIsApiKeyModalOpen(false)}
-        settings={settings}
-        onSaveSettings={handleSaveSettings}
-      />
-
       <HowToUseModal
         isOpen={isHowToUseOpen}
         onClose={() => setIsHowToUseOpen(false)}
@@ -487,12 +445,3 @@ export const App: React.FC = () => {
     </div>
   );
 };
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}

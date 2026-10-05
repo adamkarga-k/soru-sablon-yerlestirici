@@ -16,9 +16,9 @@ Test ve sınav sorularını otomatik olarak analiz eden, **12 cm genişlik x 15 
    - **Kırmızı Yatay Çizgiler (Üst & Alt Sınır)**: Merkeze yerleştirilen soruların ve ikiye bölünen parçaların tavan/taban sınırlarıdır.
    - **Mavi Dikey Çizgiler (Sol & Sağ Sütun)**: İkiye bölünen sorularda **öncül (paragraf)** sol mavi çizgiye yaslanır; **soru kökü ve seçenekler** sağ mavi çizgiye yaslanır.
    - Çizgiler şablon düzenleme ekranında mouse ile serbestçe sürüklenip ayarlanabilir.
-4. **Gemini Vision AI & Akıllı Tarama**:
-   - Google Gemini API (`gemini-2.5-flash`) ile sorunun öncülü/paragrafı ile soru kökü arasındaki dikey ayrım noktası otomatik tespit edilir.
-   - API anahtarı olmadan da çalışan yerel Beyaz Boşluk Analizi mevcuttur.
+4. **Akıllı Otomatik Tarama & Canlı Kesme Çizgisi Ayarı**:
+   - Tarayıcının yerel piksel analiz motoru ile sorunun öncülü/paragrafı ile soru kökü arasındaki dikey ayrım noktası milisaniyeler içinde tespit edilir.
+   - Hiçbir harici API veya internet bağlantısı gerekmez, %100 gizli ve yerel çalışır.
    - Kullanıcı dilerse "Kesme Ayarı" butonu ile kesme çizgisini görsel üzerinde canlı olarak yukarı/aşağı sürükleyebilir.
 5. **Orijinal Dosya Adı Garantisi**:
    - Yüklediğiniz sorular çıktıda kesinlikle **orijinal dosya adıyla** (`soru_01.png` -> `soru_01.png`) üretilir. Karışıklık yaşanmaz!
@@ -39,7 +39,7 @@ Test ve sınav sorularını otomatik olarak analiz eden, **12 cm genişlik x 15 
 - **Vite** (Hızlı derleme ve modern paketleme)
 - **Tailwind CSS** (Ferah ve duyarlı arayüz tasarımı)
 - **HTML5 Canvas API** (1920x1080 kayıpsız piksel işleme)
-- **Google Gemini API** (Multimodal Vision tabanlı soru analizi)
+- **Yerel Görüntü İşleme Motoru** (Beyaz boşluk tespiti ve piksel projeksiyonu)
 - **JSZip** (Toplu indirme ve arşivleme)
 - **IndexedDB** (Yüksek kapasiteli yerel veri kalıcılığı)
 

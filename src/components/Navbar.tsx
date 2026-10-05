@@ -10,7 +10,6 @@ import {
 
 interface NavbarProps {
   onOpenHowToUse: () => void;
-  onOpenSettings: () => void;
   onDownloadAllZip: () => void;
   hasRenderedQuestions: boolean;
   isProcessingZip: boolean;
@@ -21,7 +20,6 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenHowToUse,
-  onOpenSettings,
   onDownloadAllZip,
   hasRenderedQuestions,
   isProcessingZip,
@@ -75,16 +73,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="hidden xs:inline">Nasıl Kullanılır?</span>
-          </button>
-
-          {/* Ayarlar / API */}
-          <button
-            onClick={onOpenSettings}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-            title="Gemini API ve Sistem Ayarları"
-          >
-            <Settings className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-            <span className="hidden md:inline">Ayarlar / API</span>
           </button>
 
           {/* Toplu İndir (ZIP) */}

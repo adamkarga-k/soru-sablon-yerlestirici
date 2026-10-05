@@ -1,12 +1,12 @@
 export interface TemplateGuidelines {
-  topBound: number;        // Kırmızı üst yatay sınır (px) - varsayılan örn: 80
-  bottomBound: number;     // Kırmızı alt yatay sınır (px) - varsayılan örn: 1000
-  leftColumnX: number;     // Mavi sol dikey çizgi (öncül/paragraf yaslanma noktası) (px) - örn: 120
-  rightColumnX: number;    // Mavi sağ dikey çizgi (soru kökü yaslanma noktası) (px) - örn: 1000
-  columnWidth: number;     // İkiye bölündüğünde sütun genişliği (px) - örn: 800
+  topBound: number;        // Kırmızı üst yatay sınır (px)
+  bottomBound: number;     // Kırmızı alt yatay sınır (px)
+  leftColumnX: number;     // Mavi sol dikey çizgi (öncül/paragraf yaslanma noktası) (px)
+  rightColumnX: number;    // Mavi sağ dikey çizgi (soru kökü yaslanma noktası) (px)
+  columnWidth: number;     // İkiye bölündüğünde sütun genişliği (px)
   targetWidthCm: number;   // Otomatik ayarlanan genişlik: 12 cm
   maxHeightCm: number;     // Bölünme eşiği yükseklik: 15 cm
-  pixelsPerCm: number;     // 1 cm kaç piksel? (Varsayılan 60 px/cm => 12 cm = 720 px, 15 cm = 900 px)
+  pixelsPerCm: number;     // 1 cm kaç piksel?
 }
 
 export interface Template {
@@ -45,9 +45,6 @@ export interface QuestionItem {
 }
 
 export interface AppSettings {
-  geminiApiKey: string;
-  geminiModel: string;
-  hasSeenOnboarding: boolean;
   selectedTemplateId: string;
-  selectedCategoryId: string; // 'all' veya spesifik category id
+  selectedCategoryId: string;
 }

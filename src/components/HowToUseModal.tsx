@@ -131,15 +131,15 @@ export const HowToUseModal: React.FC<HowToUseModalProps> = ({ isOpen, onClose })
           <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-5 space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-xs font-bold">3</span>
-              Akıllı Tarama (Gemini Vision + Canlı Manuel Ayar)
+              Akıllı Otomatik Tarama & Canlı Kesme Çizgisi Ayarı
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Sorunun paragrafı ile soru kökü arasındaki ayrım, Ayarlar'dan girdiğiniz <strong>Gemini Vision API</strong> sayesinde milimetrik olarak taranır. 
-              Dilerseniz veya API anahtarınız yoksa, sistem akıllı beyaz boşluk tespiti yapar. Ayrıca her sorunun üzerinde bulunan 
+              Sorunun paragrafı ile soru kökü arasındaki ayrım, tarayıcının yerel <strong>akıllı beyaz satır boşluğu analizi</strong> sayesinde milisaniyeler içinde otomatik olarak tespit edilir (hiçbir harici API veya internet bağlantısı gerekmez).
+              Ayrıca dilediğiniz her sorunun üzerindeki 
               <span className="inline-flex items-center gap-1 mx-1 px-1.5 py-0.5 bg-slate-800 rounded text-blue-400 font-semibold border border-slate-700">
-                <Scissors className="w-3 h-3" /> Kesme Çizgisini Düzenle
+                <Scissors className="w-3 h-3" /> Kesme Ayarı
               </span> 
-              butonuyla kesme noktasını görsel üzerinde canlı olarak yukarı-aşağı sürükleyebilirsiniz!
+              butonuna tıklayarak kırmızı kesme çizgisini görsel üzerinde canlı olarak yukarı-aşağı sürükleyip milimetrik ince ayar yapabilirsiniz!
             </p>
           </div>
 

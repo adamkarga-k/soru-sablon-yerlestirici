@@ -197,9 +197,6 @@ export function getLocalSettings(): AppSettings {
     console.error('Settings parse error:', e);
   }
   return {
-    geminiApiKey: '',
-    geminiModel: 'gemini-2.5-flash',
-    hasSeenOnboarding: false,
     selectedTemplateId: 'default-template-1',
     selectedCategoryId: 'cat-all',
   };
