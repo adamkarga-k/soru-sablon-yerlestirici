@@ -15,6 +15,7 @@ Test ve sınav sorularını otomatik olarak analiz eden, **12 cm genişlik x 15 
 3. **Kırmızı ve Mavi Kılavuz Çizgileri**:
    - **Kırmızı Yatay Çizgiler (Üst & Alt Sınır)**: Merkeze yerleştirilen soruların ve ikiye bölünen parçaların tavan/taban sınırlarıdır.
    - **Mavi Dikey Çizgiler (Sol & Sağ Sütun)**: İkiye bölünen sorularda **öncül (paragraf)** sol mavi çizgiye yaslanır; **soru kökü ve seçenekler** sağ mavi çizgiye yaslanır.
+   - Çizgiler şablon düzenleme ekranında mouse ile serbestçe sürüklenip ayarlanabilir.
 4. **Gemini Vision AI & Akıllı Tarama**:
    - Google Gemini API (`gemini-2.5-flash`) ile sorunun öncülü/paragrafı ile soru kökü arasındaki dikey ayrım noktası otomatik tespit edilir.
    - API anahtarı olmadan da çalışan yerel Beyaz Boşluk Analizi mevcuttur.
@@ -23,41 +24,24 @@ Test ve sınav sorularını otomatik olarak analiz eden, **12 cm genişlik x 15 
    - Yüklediğiniz sorular çıktıda kesinlikle **orijinal dosya adıyla** (`soru_01.png` -> `soru_01.png`) üretilir. Karışıklık yaşanmaz!
 6. **50 Soruya Kadar Toplu İşlem & ZIP İndirme**:
    - Tek seferde 50 soruya kadar yükleyebilir, tek tek veya tümünü tek tıkla **ZIP** olarak indirebilirsiniz.
-7. **Sağ Menüde Soru Kategorizasyonu**:
+7. **Sağ Menüde Soru Kategorizasyonu & Şablon Yönetimi**:
    - Soruları branşlara (Türkçe, Matematik, Fen vb.) göre kategorize edebilir, filtreleyebilir ve yönetebilirsiniz.
 8. **Yerel Veri Kalıcılığı (IndexedDB + LocalStorage)**:
    - Şablonlarınız, ayarlarınız, kategorileriniz ve sorularınız tarayıcınızda saklanır. Sayfa yenilendiğinde veya tekrar açıldığında hiçbir veri kaybolmaz.
+9. **Gece / Gündüz Döngüsü**:
+   - Göz yormayan açık tema ve şık koyu tema desteği.
 
 ---
 
-## 🚀 GitHub'a Yükleme ve Vercel'e Deploy Rehberi
+## 🛠️ Teknolojiler
 
-Bu proje tamamen istemci taraflı (Client-side Canvas & Web API) çalıştığı için **Vercel üzerinde %100 ücretsiz ve statik olarak** çalışır.
-
-### 1. Adım: Git Reposu Başlatma
-Terminalde proje klasöründe (`soru-sablon-yerlestirici`) şu komutları çalıştırın:
-```bash
-git init
-git add .
-git commit -m "feat: Soru Şablon Yerleştirici (1920x1080) ilk sürüm"
-```
-
-### 2. Adım: GitHub Reposuna Gönderme
-1. [GitHub](https://github.com/new) adresinde yeni bir repository oluşturun (Örn: `soru-sablon-yerlestirici`).
-2. Terminalde deponuzu bağlayıp push yapın:
-```bash
-git remote add origin https://github.com/KULLANICI_ADINIZ/soru-sablon-yerlestirici.git
-git branch -M main
-git push -u origin main
-```
-
-### 3. Adım: Vercel'e Bağlama (Deploy)
-1. [Vercel](https://vercel.com) hesabınıza giriş yapın.
-2. **"Add New..." -> "Project"** seçeneğine tıklayın.
-3. GitHub reponuzu seçin (`soru-sablon-yerlestirici`).
-4. Framework olarak **Vite** otomatik algılanacaktır.
-5. **Deploy** butonuna tıklayın!
-6. 1 dakika içinde siteniz canlıya alınacak ve tüm kullanıcılar tarafından kullanılabilecektir.
+- **React 19** & **TypeScript**
+- **Vite** (Hızlı derleme ve modern paketleme)
+- **Tailwind CSS** (Ferah ve duyarlı arayüz tasarımı)
+- **HTML5 Canvas API** (1920x1080 kayıpsız piksel işleme)
+- **Google Gemini API** (Multimodal Vision tabanlı soru analizi)
+- **JSZip** (Toplu indirme ve arşivleme)
+- **IndexedDB** (Yüksek kapasiteli yerel veri kalıcılığı)
 
 ---
 
@@ -73,3 +57,9 @@ npm run dev
 # Canlı derleme (Production Build)
 npm run build
 ```
+
+---
+
+## 👤 Geliştirici
+
+**Ubeydullah Öz** • [Instagram (@adamkarga)](https://instagram.com/adamkarga)
