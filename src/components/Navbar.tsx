@@ -2,129 +2,108 @@ import React from 'react';
 import { 
   HelpCircle, 
   Settings, 
-  Layers, 
   Download, 
-  Sparkles,
-  LayoutTemplate
+  LayoutTemplate,
+  Sun,
+  Moon
 } from 'lucide-react';
-import { Template } from '../types';
 
 interface NavbarProps {
-  templates: Template[];
-  selectedTemplateId: string;
-  onSelectTemplate: (id: string) => void;
-  onOpenTemplateManager: () => void;
   onOpenHowToUse: () => void;
   onOpenSettings: () => void;
   onDownloadAllZip: () => void;
   hasRenderedQuestions: boolean;
   isProcessingZip: boolean;
   questionCount: number;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  templates,
-  selectedTemplateId,
-  onSelectTemplate,
-  onOpenTemplateManager,
   onOpenHowToUse,
   onOpenSettings,
   onDownloadAllZip,
   hasRenderedQuestions,
   isProcessingZip,
   questionCount,
+  theme,
+  onToggleTheme,
 }) => {
-  const currentTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0];
-
   return (
-    <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <header className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Sol: Logo ve Başlık */}
+        {/* Sol: Sade ve Ferah Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-bold text-lg">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 text-white">
             <LayoutTemplate className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-1.5">
-                Soru Şablon <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">1920x1080</span>
+              <h1 className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white">
+                Soru Şablon <span className="text-blue-600 dark:text-blue-400">1920x1080</span>
               </h1>
-              <span className="hidden sm:inline-flex px-2 py-0.5 text-[11px] font-semibold bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">
-                12cm x 15cm Kuralı
+              <span className="hidden sm:inline-flex px-2 py-0.5 text-[11px] font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full border border-blue-200 dark:border-blue-500/20">
+                12cm x 15cm
               </span>
             </div>
-            <p className="text-xs text-slate-400 hidden sm:block">
-              Otomatik Paragraf Bölme & 1920x1080 Şablon Yerleşimi
+            <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+              Otomatik Paragraf Bölme & Şablon Yerleştirici
             </p>
           </div>
         </div>
 
-        {/* Orta: Şablon Seçici & Yönetici */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-800/80 border border-slate-700 rounded-lg p-1 text-sm">
-            <span className="text-xs text-slate-400 px-2 flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-blue-400" />
-              Şablon:
-            </span>
-            <select
-              value={selectedTemplateId}
-              onChange={(e) => onSelectTemplate(e.target.value)}
-              className="bg-slate-900 text-slate-200 text-xs sm:text-sm font-medium rounded px-2.5 py-1 outline-none border border-slate-700 hover:border-slate-600 focus:border-blue-500 transition-colors cursor-pointer"
-            >
-              {templates.map((tpl) => (
-                <option key={tpl.id} value={tpl.id}>
-                  {tpl.name}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={onOpenTemplateManager}
-              title="Şablonları Düzenle veya Yeni Ekle"
-              className="ml-1 p-1.5 hover:bg-slate-700 text-slate-300 hover:text-white rounded transition-colors text-xs flex items-center gap-1"
-            >
-              <span className="hidden md:inline font-medium">Şablonları Düzenle</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Sağ: Aksiyon Butonları */}
+        {/* Sağ: Sade Aksiyonlar */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Nasıl Kullanılır Butonu */}
+          {/* Gece / Gündüz Döngüsü Butonu */}
           <button
-            onClick={onOpenHowToUse}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 transition-all shadow-sm"
+            onClick={onToggleTheme}
+            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 transition-all cursor-pointer shadow-sm"
+            title={theme === 'dark' ? 'Gündüz Moduna Geç' : 'Gece Moduna Geç'}
+            aria-label="Tema Değiştir"
           >
-            <HelpCircle className="w-4 h-4 text-emerald-400" />
-            <span>Nasıl Kullanılır?</span>
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
+            ) : (
+              <Moon className="w-4 h-4 text-indigo-600 hover:-rotate-12 transition-transform" />
+            )}
           </button>
 
-          {/* Ayarlar & API Butonu */}
+          {/* Nasıl Kullanılır */}
+          <button
+            onClick={onOpenHowToUse}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all cursor-pointer shadow-sm"
+          >
+            <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden xs:inline">Nasıl Kullanılır?</span>
+          </button>
+
+          {/* Ayarlar / API */}
           <button
             onClick={onOpenSettings}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 hover:bg-slate-750 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
             title="Gemini API ve Sistem Ayarları"
           >
-            <Settings className="w-4 h-4 text-blue-400" />
+            <Settings className="w-4 h-4 text-blue-500 dark:text-blue-400" />
             <span className="hidden md:inline">Ayarlar / API</span>
           </button>
 
-          {/* Toplu İndir (.ZIP) Butonu */}
+          {/* Toplu İndir (ZIP) */}
           <button
             onClick={onDownloadAllZip}
             disabled={!hasRenderedQuestions || isProcessingZip}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg shadow-md transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-xl shadow-md transition-all ${
               hasRenderedQuestions && !isProcessingZip
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/25 cursor-pointer active:scale-95'
-                : 'bg-slate-800 text-slate-500 border border-slate-800 cursor-not-allowed'
+                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25 cursor-pointer active:scale-95'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border border-slate-200 dark:border-slate-800 cursor-not-allowed'
             }`}
             title="Tüm işlenmiş soruları orijinal isimleriyle ZIP olarak indir"
           >
             <Download className={`w-4 h-4 ${isProcessingZip ? 'animate-bounce' : ''}`} />
             <span>
-              {isProcessingZip ? 'ZIP Hazırlanıyor...' : `Tümünü İndir (ZIP)`}
+              {isProcessingZip ? 'Hazırlanıyor...' : 'Tümünü İndir (ZIP)'}
             </span>
             {questionCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 bg-black/30 rounded-full text-[11px]">
+              <span className="ml-1 px-1.5 py-0.2 bg-black/20 dark:bg-black/40 rounded-full text-[11px]">
                 {questionCount}
               </span>
             )}

@@ -50,6 +50,26 @@ import { QuestionCard } from './components/QuestionCard';
 import { SplitAdjustModal } from './components/SplitAdjustModal';
 
 export const App: React.FC = () => {
+  // Gece / Gündüz Döngüsü
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('app_theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('app_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // State
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('default-template-1');
@@ -85,7 +105,6 @@ export const App: React.FC = () => {
         setSelectedTemplateId(savedTemplates[0].id);
       }
 
-      // Kullanıcı ilk defa giriyorsa onboarding ApiKeyModal'ı göster
       if (!localSets.hasSeenOnboarding) {
         setIsApiKeyModalOpen(true);
       }
@@ -108,14 +127,13 @@ export const App: React.FC = () => {
     setSettings(updated);
     saveLocalSettings(updated);
 
-    // Seçilen şablona göre mevcut soruları yeniden render et
     const targetTpl = templates.find((t) => t.id === id);
     if (targetTpl && questions.length > 0) {
       reRenderAllQuestions(targetTpl, questions);
     }
   };
 
-  // Tek bir soruyu işleme / render etme
+  // Soru işleme fonksiyonu
   const processQuestion = useCallback(async (
     q: QuestionItem, 
     tpl: Template,
@@ -126,7 +144,6 @@ export const App: React.FC = () => {
       let isSplit = q.isSplit;
       let splitRatio = q.splitRatio || 0.5;
 
-      // 12cm / 15cm kontrolü
       const splitCheck = checkQuestionSplit(
         q.width, 
         q.height, 
@@ -135,11 +152,9 @@ export const App: React.FC = () => {
       );
       isSplit = splitCheck.isSplit;
 
-      // Eğer ikiye bölünmesi gerekiyorsa ve henüz analiz edilmediyse
       if (isSplit && !q.splitRatio) {
         if (apiKey && apiKey.trim() !== '') {
           try {
-            // Görseli base64 yapıp Gemini'ye sor
             const base64 = await fileToBase64(q.file);
             const geminiRes = await analyzeQuestionWithGemini(base64, q.file.type, apiKey, modelName);
             splitRatio = geminiRes.splitRatio;
@@ -153,7 +168,6 @@ export const App: React.FC = () => {
             splitRatio = detectSplitByWhitespace(imgEl);
           }
         } else {
-          // API key yoksa doğrudan beyaz boşluk analizi
           const imgEl = await new Promise<HTMLImageElement>((resolve) => {
             const im = new Image();
             im.onload = () => resolve(im);
@@ -163,7 +177,6 @@ export const App: React.FC = () => {
         }
       }
 
-      // Render et (1920x1080)
       const renderRes = await renderQuestionOnTemplate(tpl, { ...q, splitRatio, isSplit }, splitRatio);
 
       return {
@@ -186,7 +199,6 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // Tüm soruları yeniden render etme
   const reRenderAllQuestions = async (tpl: Template, qList: QuestionItem[]) => {
     setIsBatchProcessing(true);
     const updatedQuestions = await Promise.all(
@@ -196,25 +208,21 @@ export const App: React.FC = () => {
     setIsBatchProcessing(false);
   };
 
-  // Yeni sorular eklendiğinde
   const handleQuestionsAdded = async (newOnes: QuestionItem[]) => {
     const combined = [...questions, ...newOnes];
     setQuestions(combined);
     setIsBatchProcessing(true);
 
-    // Yeni soruları sırayla render et
     const processedNew: QuestionItem[] = [];
     for (const item of newOnes) {
       const res = await processQuestion(item, currentTemplate, settings.geminiApiKey, settings.geminiModel);
       processedNew.push(res);
-      // Canlı güncelleme
       setQuestions((prev) => prev.map((q) => (q.id === res.id ? res : q)));
     }
 
     setIsBatchProcessing(false);
   };
 
-  // Kesme oranı manuel güncellendiğinde
   const handleApplySplitRatio = async (questionId: string, newSplitRatio: number) => {
     const targetQ = questions.find((q) => q.id === questionId);
     if (!targetQ) return;
@@ -235,20 +243,17 @@ export const App: React.FC = () => {
     );
   };
 
-  // Tekil Soru İndirme (ORİJİNAL İSİMLE!)
   const handleDownloadSingle = (question: QuestionItem) => {
     if (!question.renderedDataUrl) return;
 
     const a = document.createElement('a');
     a.href = question.renderedDataUrl;
-    // Orijinal dosya adıyla indirme:
     a.download = question.originalFileName || `soru_${Date.now()}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
 
-  // Toplu İndir (ZIP) - 50 soruya kadar orijinal isimleriyle!
   const handleDownloadAllZip = async () => {
     const renderedList = filteredQuestions.filter((q) => q.renderedBlob);
     if (renderedList.length === 0) {
@@ -260,7 +265,6 @@ export const App: React.FC = () => {
     try {
       const zip = new JSZip();
 
-      // Her soruyu orijinal dosya adıyla ZIP'e ekle
       renderedList.forEach((q) => {
         if (q.renderedBlob) {
           zip.file(q.originalFileName, q.renderedBlob);
@@ -288,12 +292,10 @@ export const App: React.FC = () => {
     }
   };
 
-  // Soru Silme
   const handleDeleteQuestion = (id: string) => {
     setQuestions((prev) => prev.filter((q) => q.id !== id));
   };
 
-  // Tüm Soruları Temizle
   const handleClearAllQuestions = () => {
     if (questions.length === 0) return;
     if (window.confirm('Yüklenen tüm soruları listeden silmek istediğinize emin misiniz?')) {
@@ -301,14 +303,12 @@ export const App: React.FC = () => {
     }
   };
 
-  // Kategori Değiştirme
   const handleCategoryChange = (questionId: string, newCatId: string) => {
     setQuestions((prev) =>
       prev.map((q) => (q.id === questionId ? { ...q, categoryId: newCatId } : q))
     );
   };
 
-  // Filtrelenmiş sorular
   const filteredQuestions = questions.filter((q) => {
     if (selectedCategoryId === 'cat-all') return true;
     return q.categoryId === selectedCategoryId;
@@ -317,61 +317,33 @@ export const App: React.FC = () => {
   const hasRenderedQuestions = questions.some((q) => q.status === 'rendered');
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col">
-      {/* Üst Menü */}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f19] text-slate-800 dark:text-slate-100 flex flex-col transition-colors">
+      {/* Sadeleştirilmiş Üst Menü */}
       <Navbar
-        templates={templates}
-        selectedTemplateId={selectedTemplateId}
-        onSelectTemplate={handleSelectTemplate}
-        onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
         onOpenHowToUse={() => setIsHowToUseOpen(true)}
         onOpenSettings={() => setIsApiKeyModalOpen(true)}
         onDownloadAllZip={handleDownloadAllZip}
         hasRenderedQuestions={hasRenderedQuestions}
         isProcessingZip={isProcessingZip}
         questionCount={filteredQuestions.length}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Ana Gövde */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
-        {/* Banner / Aktif Şablon Bilgisi */}
-        <div className="bg-gradient-to-r from-blue-950/40 via-indigo-950/20 to-slate-900/60 border border-blue-900/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
-              <Layers className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-blue-400 font-semibold uppercase tracking-wider">
-                  Aktif Şablon:
-                </span>
-                <span className="font-bold text-white text-sm sm:text-base">
-                  {currentTemplate.name}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Kırmızı Üst/Alt: {currentTemplate.guidelines.topBound}px-{currentTemplate.guidelines.bottomBound}px • Mavi Sol/Sağ: {currentTemplate.guidelines.leftColumnX}px / {currentTemplate.guidelines.rightColumnX}px
-              </p>
-            </div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7 flex flex-col gap-6">
+        {/* İşlem Durumu Bildirimi */}
+        {isBatchProcessing && (
+          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-2xl p-3.5 px-4 flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 animate-pulse">
+            <span className="flex items-center gap-2 font-semibold">
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+              Sorular taranıyor ve 1920x1080 şablona yerleştiriliyor...
+            </span>
+            <span className="font-mono text-[11px] font-bold">Lütfen bekleyin</span>
           </div>
+        )}
 
-          <div className="flex items-center gap-2 self-end sm:self-center">
-            {isBatchProcessing && (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-semibold border border-blue-500/20 animate-pulse">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                Sorular İşleniyor...
-              </span>
-            )}
-            <button
-              onClick={() => setIsTemplateManagerOpen(true)}
-              className="text-xs font-medium text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-            >
-              Şablonu Değiştir / Düzenle
-            </button>
-          </div>
-        </div>
-
-        {/* 2 Sütunlu Çalışma Alanı (Sol: Uploader & Liste, Sağ: Kategoriler) */}
+        {/* 2 Sütunlu Çalışma Alanı: Sol (Yükleme & Sorular) | Sağ (Şablon + Kategoriler) */}
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* Sol / Ana Alan */}
           <div className="flex-1 w-full space-y-6">
@@ -384,48 +356,46 @@ export const App: React.FC = () => {
             />
 
             {/* Soru Listesi Başlık & Filtre Bilgisi */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-tight">
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                   Yüklenen Sorular
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-800 text-blue-400 border border-slate-700">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 shadow-sm">
                   {filteredQuestions.length} soru
                 </span>
                 {selectedCategoryId !== 'cat-all' && (
-                  <span className="text-xs text-slate-400 flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                    <Filter className="w-3 h-3 text-blue-400" />
+                  <span className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <Filter className="w-3 h-3 text-blue-500" />
                     Filtre: {categories.find((c) => c.id === selectedCategoryId)?.name}
                   </span>
                 )}
               </div>
 
               {questions.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleClearAllQuestions}
-                    className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 px-2 py-1 rounded transition-colors"
-                    title="Tüm soruları sil"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Tümünü Temizle</span>
-                  </button>
-                </div>
+                <button
+                  onClick={handleClearAllQuestions}
+                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Tüm soruları sil"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Tümünü Temizle</span>
+                </button>
               )}
             </div>
 
             {/* Soruların Grid Listesi */}
             {filteredQuestions.length === 0 ? (
-              <div className="bg-slate-900/30 border border-slate-800/60 rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-slate-800/50 flex items-center justify-center text-slate-500">
+              <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-12 text-center flex flex-col items-center justify-center gap-3 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                   <FolderOpen className="w-6 h-6" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-sm font-semibold text-slate-300">
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Henüz soru yüklenmedi
                   </h3>
-                  <p className="text-xs text-slate-500 max-w-sm">
-                    Yukarıdaki alana test sorularınızı sürükleyip bırakabilirsiniz. Otomatik olarak 12cm x 15cm kuralına göre taranacak ve 1920x1080 şablona yerleştirilecektir.
+                  <p className="text-xs text-slate-400 max-w-sm">
+                    Yukarıdaki alana soru görsellerinizi sürükleyip bırakabilirsiniz. Otomatik olarak 12cm x 15cm kuralına göre taranacak ve sağda seçtiğiniz şablona yerleştirilecektir.
                   </p>
                 </div>
               </div>
@@ -449,8 +419,12 @@ export const App: React.FC = () => {
             )}
           </div>
 
-          {/* Sağ Alan: Soru Kategorileri Menüsü */}
+          {/* Sağ Alan: Şablon Yönetimi (Üstte) + Soru Kategorileri (Altta) */}
           <CategorySidebar
+            templates={templates}
+            selectedTemplateId={selectedTemplateId}
+            onSelectTemplate={handleSelectTemplate}
+            onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
             categories={categories}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={setSelectedCategoryId}
@@ -461,7 +435,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-slate-800/80 bg-slate-950/80 py-4 text-center text-xs text-slate-500">
+      <footer className="mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/80 py-4 text-center text-xs text-slate-500 transition-colors">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
           <span>
             Soru Şablon Yerleştirici (1920x1080) • Orijinal Dosya Adı Garantisi • Gemini Vision AI Entegrasyonu
@@ -473,7 +447,7 @@ export const App: React.FC = () => {
               href="https://instagram.com/adamkarga"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 font-semibold underline decoration-blue-500/40 hover:decoration-blue-400 transition-colors inline-flex items-center gap-1"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-colors inline-flex items-center gap-1"
             >
               Ubeydullah Öz
             </a>
@@ -482,7 +456,6 @@ export const App: React.FC = () => {
       </footer>
 
       {/* MODALLAR */}
-      {/* 1. Gemini API / Ayarlar Modalı (İlk girişte de açılır) */}
       <ApiKeyModal
         isOpen={isApiKeyModalOpen}
         onClose={() => setIsApiKeyModalOpen(false)}
@@ -490,13 +463,11 @@ export const App: React.FC = () => {
         onSaveSettings={handleSaveSettings}
       />
 
-      {/* 2. Nasıl Kullanılır Modalı */}
       <HowToUseModal
         isOpen={isHowToUseOpen}
         onClose={() => setIsHowToUseOpen(false)}
       />
 
-      {/* 3. Şablon Yönetimi & Kılavuz Çizgileri Modalı */}
       <TemplateManagerModal
         isOpen={isTemplateManagerOpen}
         onClose={() => setIsTemplateManagerOpen(false)}
@@ -506,7 +477,6 @@ export const App: React.FC = () => {
         onTemplatesUpdated={setTemplates}
       />
 
-      {/* 4. İkiye Bölünmüş Soru Kesme Noktası İnce Ayar Modalı */}
       <SplitAdjustModal
         isOpen={editingQuestion !== null}
         onClose={() => setEditingQuestion(null)}
@@ -518,7 +488,6 @@ export const App: React.FC = () => {
   );
 };
 
-// Yardımcı base64 çevirici
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
