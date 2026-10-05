@@ -18,6 +18,8 @@ interface CategorySidebarProps {
   selectedTemplateId: string;
   onSelectTemplate: (id: string) => void;
   onOpenTemplateManager: () => void;
+  onReapplyTemplate?: () => void;
+  isReapplying?: boolean;
   // Kategori yönetimi
   categories: Category[];
   selectedCategoryId: string;
@@ -31,6 +33,8 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
   selectedTemplateId,
   onSelectTemplate,
   onOpenTemplateManager,
+  onReapplyTemplate,
+  isReapplying,
   categories,
   selectedCategoryId,
   onSelectCategory,
@@ -162,6 +166,19 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
             <span>Kırmızı: {currentTemplate?.guidelines.topBound}px-{currentTemplate?.guidelines.bottomBound}px</span>
             <span>Mavi: {currentTemplate?.guidelines.leftColumnX}px / {currentTemplate?.guidelines.rightColumnX}px</span>
           </div>
+
+          {/* Şablonu Hazırdaki Sorulara Yeniden Uygulama Butonu */}
+          {questions.length > 0 && onReapplyTemplate && (
+            <button
+              onClick={onReapplyTemplate}
+              disabled={isReapplying}
+              className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-600/20 dark:hover:bg-blue-600/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95 disabled:opacity-50"
+              title="Mevcut kesimleri koruyarak tüm soruları bu güncel şablona göre yeniden oluştur"
+            >
+              <Sliders className={`w-3.5 h-3.5 ${isReapplying ? 'animate-spin' : ''}`} />
+              <span>{isReapplying ? 'Yeniden Oluşturuluyor...' : 'Şablonu Sorulara Yeniden Uygula'}</span>
+            </button>
+          )}
         </div>
       </div>
 

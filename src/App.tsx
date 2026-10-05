@@ -174,6 +174,24 @@ export const App: React.FC = () => {
     setIsBatchProcessing(false);
   };
 
+  const handleReapplyTemplateToAll = async () => {
+    if (questions.length === 0) return;
+    await reRenderAllQuestions(currentTemplate, questions);
+    confetti({
+      particleCount: 60,
+      spread: 70,
+      origin: { y: 0.7 },
+    });
+  };
+
+  const handleTemplatesUpdated = async (newTemplates: Template[]) => {
+    setTemplates(newTemplates);
+    const updatedCurrent = newTemplates.find((t) => t.id === selectedTemplateId) || newTemplates[0];
+    if (updatedCurrent && questions.length > 0) {
+      await reRenderAllQuestions(updatedCurrent, questions);
+    }
+  };
+
   const handleQuestionsAdded = async (newOnes: QuestionItem[]) => {
     const combined = [...questions, ...newOnes];
     setQuestions(combined);
@@ -338,14 +356,25 @@ export const App: React.FC = () => {
               </div>
 
               {questions.length > 0 && (
-                <button
-                  onClick={handleClearAllQuestions}
-                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                  title="Tüm soruları sil"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Tümünü Temizle</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleReapplyTemplateToAll}
+                    disabled={isBatchProcessing}
+                    className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer font-semibold disabled:opacity-50"
+                    title="Mevcut kesimleri koruyarak tüm soruları güncel şablona yeniden yerleştir"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isBatchProcessing ? 'animate-spin' : ''}`} />
+                    <span>Şablonu Sorulara Uygula</span>
+                  </button>
+                  <button
+                    onClick={handleClearAllQuestions}
+                    className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="Tüm soruları sil"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Tümünü Temizle</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -390,6 +419,8 @@ export const App: React.FC = () => {
             selectedTemplateId={selectedTemplateId}
             onSelectTemplate={handleSelectTemplate}
             onOpenTemplateManager={() => setIsTemplateManagerOpen(true)}
+            onReapplyTemplate={handleReapplyTemplateToAll}
+            isReapplying={isBatchProcessing}
             categories={categories}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={setSelectedCategoryId}
@@ -438,7 +469,7 @@ export const App: React.FC = () => {
         templates={templates}
         selectedTemplateId={selectedTemplateId}
         onSelectTemplate={handleSelectTemplate}
-        onTemplatesUpdated={setTemplates}
+        onTemplatesUpdated={handleTemplatesUpdated}
       />
 
       <SplitAdjustModal
