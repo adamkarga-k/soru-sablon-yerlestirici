@@ -9,7 +9,8 @@ import {
   Filter, 
   HelpCircle, 
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  Folder
 } from 'lucide-react';
 
 import { 
@@ -104,6 +105,13 @@ export const App: React.FC = () => {
         setSelectedTemplateId(savedTemplates[0].id);
       }
 
+      // Aktif kategoriyi geri yükle
+      if (localSets.selectedCategoryId) {
+        if (localSets.selectedCategoryId === 'cat-all' || savedCategories.some(c => c.id === localSets.selectedCategoryId)) {
+          setSelectedCategoryId(localSets.selectedCategoryId);
+        }
+      }
+
       // Hafızadaki kayıtlı soruları yükle (F5 / Sayfa yenilemelerinde kaybolmaz)
       const savedQuestions = await getSavedQuestions();
       if (savedQuestions && savedQuestions.length > 0) {
@@ -128,6 +136,14 @@ export const App: React.FC = () => {
     }
   };
 
+  // Aktif Kategori Değişimi & Kalıcı Kaydı
+  const handleSelectCategory = (catId: string) => {
+    setSelectedCategoryId(catId);
+    const updated = { ...settings, selectedCategoryId: catId };
+    setSettings(updated);
+    saveLocalSettings(updated);
+  };
+
   // Soru işleme fonksiyonu (Tamamen yerel & API'siz!)
   const processQuestion = useCallback(async (
     q: QuestionItem, 
@@ -135,7 +151,7 @@ export const App: React.FC = () => {
   ): Promise<QuestionItem> => {
     try {
       let isSplit = q.isSplit;
-      let splitRatio = q.splitRatio || 0.5;
+      let splitRatio = q.splitRatio;
 
       const splitCheck = checkQuestionSplit(
         q.width, 
@@ -145,14 +161,16 @@ export const App: React.FC = () => {
       );
       isSplit = splitCheck.isSplit;
 
-      // 15 cm'yi aştıysa akıllı beyaz boşluk analizi ile otomatik kesme noktasını bul
-      if (isSplit && !q.splitRatio) {
+      // Eğer 15 cm'yi aştıysa ve henüz bir kesme oranı belirlenmemişse akıllı beyaz boşluk analizi yap
+      if (isSplit && (splitRatio === undefined || splitRatio === null || splitRatio === 0)) {
         const imgEl = await new Promise<HTMLImageElement>((resolve) => {
           const im = new Image();
           im.onload = () => resolve(im);
           im.src = q.previewUrl;
         });
         splitRatio = detectSplitByWhitespace(imgEl);
+      } else if (!splitRatio) {
+        splitRatio = 0.5;
       }
 
       const renderRes = await renderQuestionOnTemplate(tpl, { ...q, splitRatio, isSplit }, splitRatio);
@@ -396,10 +414,21 @@ export const App: React.FC = () => {
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 shadow-sm">
                   {filteredQuestions.length} soru
                 </span>
-                {selectedCategoryId !== 'cat-all' && (
-                  <span className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-                    <Filter className="w-3 h-3 text-blue-500" />
-                    Filtre: {categories.find((c) => c.id === selectedCategoryId)?.name}
+                {selectedCategoryId !== 'cat-all' ? (
+                  <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 text-xs font-bold shadow-sm">
+                    <Folder className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Klasör: {categories.find((c) => c.id === selectedCategoryId)?.name}</span>
+                    <button
+                      onClick={() => handleSelectCategory('cat-all')}
+                      className="ml-1 text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                      title="Tüm soruları göster"
+                    >
+                      (Tümünü Göster)
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm font-medium">
+                    Tüm Klasörler
                   </span>
                 )}
                 {filteredQuestions.length > 0 && (
@@ -522,8 +551,13 @@ export const App: React.FC = () => {
             isReapplying={isBatchProcessing}
             categories={categories}
             selectedCategoryId={selectedCategoryId}
-            onSelectCategory={setSelectedCategoryId}
-            onCategoriesUpdated={setCategories}
+            onSelectCategory={handleSelectCategory}
+            onCategoriesUpdated={(newCats) => {
+              setCategories(newCats);
+              if (selectedCategoryId !== 'cat-all' && !newCats.some((c) => c.id === selectedCategoryId)) {
+                handleSelectCategory('cat-all');
+              }
+            }}
             questions={questions}
           />
         </div>

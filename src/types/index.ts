@@ -37,8 +37,8 @@ export interface QuestionItem {
   status: QuestionStatus;
   statusMessage?: string;
   isSplit: boolean;         // 15 cm'yi aştığı için ikiye bölündü mü?
-  splitRatio: number;       // Kesme noktası oranı (0 - 1 arası, dikey Y oranı)
-  splitY: number;           // Orijinal görsel üzerinde dikey kesme pikseli
+  splitRatio?: number;      // Kesme noktası oranı (0 - 1 arası, dikey Y oranı)
+  splitY?: number;          // Orijinal görsel üzerinde dikey kesme pikseli
   renderedDataUrl?: string; // 1920x1080 Nihai render görseli (Data URL)
   renderedBlob?: Blob;      // İndirme için blob
   errorMessage?: string;

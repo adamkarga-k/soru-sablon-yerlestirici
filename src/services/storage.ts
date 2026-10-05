@@ -230,8 +230,8 @@ export interface StoredQuestionRecord {
   status: QuestionStatus;
   statusMessage?: string;
   isSplit: boolean;
-  splitRatio: number;
-  splitY: number;
+  splitRatio?: number;
+  splitY?: number;
   renderedDataUrl?: string;
   renderedBlob?: Blob;
   errorMessage?: string;
@@ -332,6 +332,11 @@ export async function getSavedQuestions(): Promise<QuestionItem[]> {
             type: rec.originalBlob?.type || 'image/png',
           });
           const previewUrl = URL.createObjectURL(file);
+          // Tarayıcı yenilendiğinde en taze ve hızlı render görseli
+          const renderedDataUrl = rec.renderedBlob
+            ? URL.createObjectURL(rec.renderedBlob)
+            : rec.renderedDataUrl;
+
           return {
             id: rec.id,
             originalFileName: rec.originalFileName,
@@ -345,7 +350,7 @@ export async function getSavedQuestions(): Promise<QuestionItem[]> {
             isSplit: rec.isSplit,
             splitRatio: rec.splitRatio,
             splitY: rec.splitY,
-            renderedDataUrl: rec.renderedDataUrl,
+            renderedDataUrl,
             renderedBlob: rec.renderedBlob,
             errorMessage: rec.errorMessage,
           };
