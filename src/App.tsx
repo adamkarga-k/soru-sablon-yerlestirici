@@ -396,11 +396,10 @@ export const App: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* Sol / Ana Alan */}
           <div className="flex-1 w-full space-y-6">
-            {/* Soru Yükleme Alanı (50 Soruya kadar) */}
+            {/* Soru Yükleme Alanı (Sınırsız) */}
             <QuestionUploader
               onQuestionsAdded={handleQuestionsAdded}
               currentCount={questions.length}
-              maxQuestions={50}
               categories={categories}
               selectedCategoryId={selectedCategoryId}
             />

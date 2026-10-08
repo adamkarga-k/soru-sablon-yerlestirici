@@ -6,7 +6,6 @@ import { checkQuestionSplit } from '../services/renderer';
 interface QuestionUploaderProps {
   onQuestionsAdded: (newQuestions: QuestionItem[]) => void;
   currentCount: number;
-  maxQuestions?: number;
   categories: Category[];
   selectedCategoryId: string;
 }
@@ -14,7 +13,6 @@ interface QuestionUploaderProps {
 export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
   onQuestionsAdded,
   currentCount,
-  maxQuestions = 50,
   categories,
   selectedCategoryId,
 }) => {
@@ -42,13 +40,7 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    const remainingSlots = maxQuestions - currentCount;
-    if (remainingSlots <= 0) {
-      alert(`Maksimum ${maxQuestions} soru sınırına ulaştınız.`);
-      return;
-    }
-
-    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+    const filesToProcess = Array.from(files);
     setIsProcessingFiles(true);
 
     const resolvedCategoryId = selectedCategoryId !== 'cat-all'
@@ -131,7 +123,7 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
             Soru Görsellerini Sürükleyin veya Dosya Seçin
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Aynı anda <span className="text-blue-600 dark:text-blue-400 font-semibold">{maxQuestions} soruya kadar</span> yükleyebilirsiniz. Orijinal dosya adlarınız korunur.
+            Dilediğiniz kadar görseli tek seferde veya parça parça ekleyebilirsiniz. <span className="text-blue-600 dark:text-blue-400 font-semibold">Soru sınırı yoktur.</span> Orijinal dosya adlarınız korunur.
           </p>
         </div>
 
@@ -180,8 +172,9 @@ export const QuestionUploader: React.FC<QuestionUploaderProps> = ({
           <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-700/60 font-medium">
             12cm x 15cm Otomatik Oran
           </span>
-          <span className="px-2.5 py-1 bg-blue-50 dark:bg-slate-800/80 rounded-lg border border-blue-200 dark:border-slate-700/60 text-blue-600 dark:text-blue-400 font-semibold">
-            Kalan Kontenjan: {maxQuestions - currentCount} soru
+          <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg border border-emerald-200 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+            Sınırsız Soru Desteği (Yüklü: {currentCount})
           </span>
         </div>
       </div>

@@ -147,7 +147,7 @@ export const HowToUseModal: React.FC<HowToUseModalProps> = ({ isOpen, onClose })
           <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-5 space-y-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-xs font-bold">4</span>
-              Orijinal Dosya İsimleri Korunur (50 Soruya Kadar)
+              Orijinal Dosya İsimleri Korunur (Sınırsız Görsel Desteği)
             </h3>
             <div className="text-xs text-slate-300 space-y-2">
               <div className="flex items-center gap-2 text-emerald-400 font-medium">

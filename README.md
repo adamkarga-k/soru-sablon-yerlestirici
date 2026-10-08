@@ -22,8 +22,8 @@ Test ve sınav sorularını otomatik olarak analiz eden, **12 cm genişlik x 15 
    - Kullanıcı dilerse "Kesme Ayarı" butonu ile kesme çizgisini görsel üzerinde canlı olarak yukarı/aşağı sürükleyebilir.
 5. **Orijinal Dosya Adı Garantisi**:
    - Yüklediğiniz sorular çıktıda kesinlikle **orijinal dosya adıyla** (`soru_01.png` -> `soru_01.png`) üretilir. Karışıklık yaşanmaz!
-6. **50 Soruya Kadar Toplu İşlem & ZIP İndirme**:
-   - Tek seferde 50 soruya kadar yükleyebilir, tek tek veya tümünü tek tıkla **ZIP** olarak indirebilirsiniz.
+6. **Sınırsız Soru Yükleme & Toplu ZIP İndirme**:
+   - Dilediğiniz sayıda görseli tek seferde veya peyderpey yükleyebilir, tek tek veya tümünü tek tıkla **ZIP** olarak indirebilirsiniz. Soru sınırı yoktur.
 7. **Sağ Menüde Soru Kategorizasyonu & Şablon Yönetimi**:
    - Soruları branşlara (Türkçe, Matematik, Fen vb.) göre kategorize edebilir, filtreleyebilir ve yönetebilirsiniz.
 8. **Yerel Veri Kalıcılığı (IndexedDB + LocalStorage)**:
